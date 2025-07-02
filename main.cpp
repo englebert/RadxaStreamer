@@ -58,25 +58,28 @@ int main(int argc, char *argv[]) {
     std::string encoder, parser;
     if (codec == "H264") {
         encoder = "mpph264enc";
-        parser  = "h264parse";
+        parser  = "h264parse config-interval=1";
     } else {
         encoder = "mpph265enc";
-        parser  = "h265parse";
+        parser  = "h265parse config-interval=1";
     }
 
     // build pipeline description
+    // gst-launch-1.0   v4l2src device=/dev/video0 io-mode=2     ! video/x-raw,width=1280,height=720,framerate=30/1   ! videoconvert                   ! video/x-raw,format=NV12,width=1280,height=720   ! queue   ! mpph264enc rc-mode=vbr bps=6000000 bps-max=8000000  ! h264parse     ! filesink location=/tmp/ruby/fifocam1 sync=false
     std::ostringstream ss;
     ss << "v4l2src device=/dev/video0 io-mode=2 ! "
        << "video/x-raw,format=NV12,width=" << width
        << ",height=" << height
        << ",framerate=" << fps << "/1 ! "
+       //// << "videoconvert ! video/x-raw,format=NV12,width=1280,height=720 !"
        << encoder
-       << " rc-mode=vbr bps=" << bps 
-       << " bps-max=12000000 ! "
+       << " rc-mode=vbr bps=1500000"
+       << " bps-max=" << bps << " ! "
        // << " ! " << parser
        // << " ! mpegtsmux ! "
        << "queue max-size-time=200000000 leaky=downstream ! "
-       << "filesink location=/tmp/ruby/fifocam1 sync=true";
+       << "filesink location=/tmp/ruby/fifocam1 sync=false";
+       // << "filesink location=/tmp/ruby/fifocam1 sync=true";
 
     std::string pipeline_desc = ss.str();
 
